@@ -1,0 +1,4 @@
+obj/
+.cache/
+compile_commands.json
+kfs-1.bin
