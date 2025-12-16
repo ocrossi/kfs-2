@@ -1,5 +1,6 @@
 #include <kernel.h>
 #include <kernel/terminal.h>
+#include <kernel/gdt.h>
 #include <stdio.h>
 
 static void test_terminal(void)
@@ -13,6 +14,6 @@ static void test_terminal(void)
 void kernel_main(void)
 {
 	terminal_initialize();
-
+  gdt_install();
 	test_terminal();
 }
