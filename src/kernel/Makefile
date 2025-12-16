@@ -49,7 +49,8 @@ $(ARCHOBJDIR)/crti.o \
 $(ARCHOBJDIR)/crtbegin.o \
 $(KERNEL_OBJS) \
 $(ARCHOBJDIR)/crtend.o \
-$(ARCHOBJDIR)/crtn.o
+$(ARCHOBJDIR)/crtn.o \
+$(ARCHOBJDIR)/gdt_flush.o
 
 LINK_LIST=\
 $(LDFLAGS) \
@@ -59,6 +60,7 @@ $(KERNEL_OBJS) \
 $(LIBS) \
 $(ARCHOBJDIR)/crtend.o \
 $(ARCHOBJDIR)/crtn.o \
+$(ARCHOBJDIR)/gdt_flush.o
 
 all: $(NAME)
 

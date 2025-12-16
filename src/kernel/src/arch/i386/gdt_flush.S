@@ -1,6 +1,6 @@
 .section .text
 .global gdt_flush
-. type gdt_flush, @function
+.type gdt_flush, @function
 
 gdt_flush:
     movl 4(%esp), %eax    # Get the pointer to the GDT descriptor
@@ -15,6 +15,6 @@ gdt_flush:
     movw %ax, %ss
 
     # Far jump to reload CS (code segment)
-    ljmp $0x08, $. flush   # 0x08 is the offset to kernel code segment
-. flush:
+    ljmp $0x08, $.flush   # 0x08 is the offset to kernel code segment
+.flush:
     ret
