@@ -6,7 +6,7 @@
 #include <string.h>
 
 /* Helper to print data */
-static size_t print_data(const char* data, size_t length)
+static int print_data(const char* data, size_t length)
 {
 	const unsigned char* bytes = (const unsigned char*) data;
 
@@ -14,7 +14,7 @@ static size_t print_data(const char* data, size_t length)
 		if (putchar(bytes[i]) == EOF)
 			return -1;
 
-	return length;
+	return (int)length;
 }
 
 /* Helper to print a single character */
@@ -61,9 +61,23 @@ static int print_int(int value)
 	return print_data(representation + sizeof(representation) - len, len);
 }
 
+/* Helper to print an unsigned integer */
+static int print_uint(unsigned int value)
+{
+	char representation[11];
+	size_t len = 0;
+
+	do {
+		representation[sizeof(representation) - len++ - 1] = '0' + value % 10;
+		value /= 10;
+	} while (value != 0);
+
+	return print_data(representation + sizeof(representation) - len, len);
+}
+
 /* printk: kernel-specific printf function
  * Simplified printf implementation for kernel logging
- * Supports %c, %s, %d, %i format specifiers
+ * Supports %c, %s, %d, %i, %u, %% format specifiers
  */
 int printk(const char* restrict fmt, ...)
 {
@@ -116,6 +130,16 @@ int printk(const char* restrict fmt, ...)
 				case 'i': {
 					int i = va_arg(args, int);
 					int ret = print_int(i);
+					if (ret < 0) {
+						written = -1;
+						goto end;
+					}
+					written += ret;
+					break;
+				}
+				case 'u': {
+					unsigned int u = va_arg(args, unsigned int);
+					int ret = print_uint(u);
 					if (ret < 0) {
 						written = -1;
 						goto end;
@@ -201,8 +225,8 @@ void print_kernel_stack(void)
 	print_hex(ebp);
 	printk("\n");
 	
-	printk("Stack size: %d bytes\n", (uint32_t)&stack_top - (uint32_t)&stack_bottom);
-	printk("Stack used: %d bytes\n", (uint32_t)&stack_top - esp);
+	printk("Stack size: %u bytes\n", (unsigned int)((uint32_t)&stack_top - (uint32_t)&stack_bottom));
+	printk("Stack used: %u bytes\n", (unsigned int)((uint32_t)&stack_top - esp));
 	
 	/* Print the top of the stack (most recent values) */
 	printk("\n=== Top of Stack (16 values) ===\n");
