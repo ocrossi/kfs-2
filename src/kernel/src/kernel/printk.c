@@ -2,22 +2,141 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <limits.h>
+#include <string.h>
+
+/* Helper to print data */
+static size_t print_data(const char* data, size_t length)
+{
+	const unsigned char* bytes = (const unsigned char*) data;
+
+	for (size_t i = 0; i < length; i++)
+		if (putchar(bytes[i]) == EOF)
+			return -1;
+
+	return length;
+}
+
+/* Helper to print a single character */
+static int print_char(char c)
+{
+	if (putchar(c) == EOF)
+		return -1;
+	return 1;
+}
+
+/* Helper to print a string */
+static int print_string(const char *str)
+{
+	size_t len = strlen(str);
+	return print_data(str, len);
+}
+
+/* Helper to print an integer */
+static int print_int(int value)
+{
+	char representation[11];
+	size_t len = 0;
+	char sign;
+
+	if (value < 0) {
+		sign = '-';
+		value = -value;
+	}
+	else {
+		sign = '\0';
+	}
+
+	do {
+		representation[sizeof(representation) - len++ - 1] = '0' + value % 10;
+		value /= 10;
+	} while (value != 0);
+
+	if (sign != '\0')
+		representation[sizeof(representation) - len++ - 1] = sign;
+
+	return print_data(representation + sizeof(representation) - len, len);
+}
 
 /* printk: kernel-specific printf function
- * This is essentially an alias to printf but provides
- * a kernel-specific namespace for logging
+ * Simplified printf implementation for kernel logging
+ * Supports %c, %s, %d, %i format specifiers
  */
 int printk(const char* restrict fmt, ...)
 {
 	va_list args;
-	int ret;
+	int written = 0;
+	const char *p;
 
 	va_start(args, fmt);
-	/* We reuse the existing printf implementation */
-	ret = printf(fmt, args);
-	va_end(args);
 
-	return ret;
+	for (p = fmt; *p != '\0'; p++) {
+		if (*p != '%') {
+			if (print_char(*p) < 0) {
+				written = -1;
+				break;
+			}
+			written++;
+		} else {
+			p++; /* Skip '%' */
+			if (*p == '\0')
+				break;
+
+			switch (*p) {
+				case 'c': {
+					char c = (char) va_arg(args, int);
+					int ret = print_char(c);
+					if (ret < 0) {
+						written = -1;
+						goto end;
+					}
+					written += ret;
+					break;
+				}
+				case 's': {
+					const char *s = va_arg(args, const char*);
+					int ret = print_string(s);
+					if (ret < 0) {
+						written = -1;
+						goto end;
+					}
+					written += ret;
+					break;
+				}
+				case 'd':
+				case 'i': {
+					int i = va_arg(args, int);
+					int ret = print_int(i);
+					if (ret < 0) {
+						written = -1;
+						goto end;
+					}
+					written += ret;
+					break;
+				}
+				case '%': {
+					if (print_char('%') < 0) {
+						written = -1;
+						goto end;
+					}
+					written++;
+					break;
+				}
+				default:
+					/* Unknown format specifier, just print it */
+					if (print_char('%') < 0 || print_char(*p) < 0) {
+						written = -1;
+						goto end;
+					}
+					written += 2;
+					break;
+			}
+		}
+	}
+
+end:
+	va_end(args);
+	return written;
 }
 
 /* Helper function to print a 32-bit value in hexadecimal */
