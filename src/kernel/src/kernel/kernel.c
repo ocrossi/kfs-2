@@ -15,11 +15,11 @@ void kernel_main(void)
 	gdt_install();
 	
 	/* Test printk functionality */
-	printk("KFS-2 Kernel initialized\n");
-	printk("GDT installed at address %p\n", (void*)&gdt);
-	
+
 	/* Print kernel stack information */
 	print_kernel_stack();
 	
 	test_terminal();
+	printk("KFS-2 Kernel initialized\n");
+	printk("GDT installed at address %p\n", (void*)&gdt);
 }
