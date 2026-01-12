@@ -51,10 +51,15 @@ static int print_int(int value)
 		abs_value = (unsigned int)value;
 	}
 
-	do {
-		representation[sizeof(representation) - len++ - 1] = '0' + abs_value % 10;
-		abs_value /= 10;
-	} while (abs_value != 0);
+	/* Handle zero case explicitly */
+	if (abs_value == 0) {
+		representation[sizeof(representation) - len++ - 1] = '0';
+	} else {
+		while (abs_value != 0) {
+			representation[sizeof(representation) - len++ - 1] = '0' + abs_value % 10;
+			abs_value /= 10;
+		}
+	}
 
 	if (sign != '\0')
 		representation[sizeof(representation) - len++ - 1] = sign;
@@ -68,17 +73,42 @@ static int print_uint(unsigned int value)
 	char representation[11];
 	size_t len = 0;
 
-	do {
-		representation[sizeof(representation) - len++ - 1] = '0' + value % 10;
-		value /= 10;
-	} while (value != 0);
+	/* Handle zero case explicitly */
+	if (value == 0) {
+		representation[sizeof(representation) - len++ - 1] = '0';
+	} else {
+		while (value != 0) {
+			representation[sizeof(representation) - len++ - 1] = '0' + value % 10;
+			value /= 10;
+		}
+	}
 
 	return print_data(representation + sizeof(representation) - len, len);
 }
 
+/* Helper to print a pointer in hexadecimal */
+static int print_pointer(void *ptr)
+{
+	const char hex_chars[] = "0123456789abcdef";
+	char buffer[11]; /* "0x" + 8 hex digits + '\0' */
+	uint32_t value = (uint32_t)ptr;
+	int i;
+
+	buffer[0] = '0';
+	buffer[1] = 'x';
+	
+	for (i = 9; i >= 2; i--) {
+		buffer[i] = hex_chars[value & 0xF];
+		value >>= 4;
+	}
+	buffer[10] = '\0';
+
+	return print_string(buffer);
+}
+
 /* printk: kernel-specific printf function
  * Simplified printf implementation for kernel logging
- * Supports %c, %s, %d, %i, %u, %% format specifiers
+ * Supports %c, %s, %d, %i, %u, %p, %% format specifiers
  */
 int printk(const char* restrict fmt, ...)
 {
@@ -141,6 +171,16 @@ int printk(const char* restrict fmt, ...)
 				case 'u': {
 					unsigned int u = va_arg(args, unsigned int);
 					int ret = print_uint(u);
+					if (ret < 0) {
+						written = -1;
+						goto end;
+					}
+					written += ret;
+					break;
+				}
+				case 'p': {
+					void *p_val = va_arg(args, void*);
+					int ret = print_pointer(p_val);
 					if (ret < 0) {
 						written = -1;
 						goto end;
