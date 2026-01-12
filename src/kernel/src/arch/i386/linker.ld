@@ -6,6 +6,13 @@ ENTRY(_start)
    kernel image. */
 SECTIONS
 {
+	/* Place GDT at fixed address 0x00000800 as required */
+	. = 0x00000800;
+	.gdt ALIGN(8) :
+	{
+		*(.gdt)
+	}
+
 	/* It used to be universally recommended to use 1M as a start offset,
 	   as it was effectively guaranteed to be available under BIOS systems.
 	   However, UEFI has made things more complicated, and experimental data

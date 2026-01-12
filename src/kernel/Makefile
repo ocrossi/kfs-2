@@ -42,6 +42,7 @@ KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
 $(addprefix $(OBJDIR)/, \
 kernel/kernel.o \
+kernel/printk.o \
 )
 
 OBJS=\

@@ -24,8 +24,10 @@ struct gdt_ptr {
  * 4: User Code Segment
  * 5: User Data Segment
  * 6: User Stack (can use same as user data)
+ * 
+ * Place GDT at fixed address 0x00000800 using the .gdt section
  */
-struct gdt_entry gdt[7];
+struct gdt_entry gdt[7] __attribute__((section(".gdt")));
 struct gdt_ptr gp;
 
 /* External assembly function to load GDT */
