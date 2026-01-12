@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <limits.h>
 #include <string.h>
 
@@ -114,7 +115,7 @@ int printk(const char* restrict fmt, ...)
 					const char *s = va_arg(args, const char*);
 					int ret;
 					/* Handle NULL pointer by printing "(null)" */
-					if (s == (void*)0) {
+					if (s == NULL) {
 						ret = print_string("(null)");
 					} else {
 						ret = print_string(s);
@@ -173,7 +174,7 @@ end:
 }
 
 /* Helper function to print a 32-bit value in hexadecimal */
-static void print_hex(uint32_t value)
+static int print_hex(uint32_t value)
 {
 	const char hex_chars[] = "0123456789ABCDEF";
 	char buffer[11];
@@ -188,7 +189,7 @@ static void print_hex(uint32_t value)
 	}
 	buffer[10] = '\0';
 
-	print_string(buffer);
+	return print_string(buffer);
 }
 
 /* Print kernel stack information
