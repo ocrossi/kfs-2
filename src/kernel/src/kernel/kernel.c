@@ -16,8 +16,8 @@ void kernel_main(void)
 	
 	/* Test printk functionality */
 	printk("KFS-2 Kernel initialized\n");
-	printk("GDT installed at address 0x00000800\n");
-  	
+	printk("GDT installed at address %p\n", (void*)&gdt);
+	
 	/* Print kernel stack information */
 	print_kernel_stack();
 	
