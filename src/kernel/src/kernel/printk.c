@@ -38,19 +38,22 @@ static int print_int(int value)
 	char representation[11];
 	size_t len = 0;
 	char sign;
+	unsigned int abs_value;
 
 	if (value < 0) {
 		sign = '-';
-		value = -value;
+		/* Handle INT_MIN correctly by converting to unsigned */
+		abs_value = (unsigned int)(-(value + 1)) + 1;
 	}
 	else {
 		sign = '\0';
+		abs_value = (unsigned int)value;
 	}
 
 	do {
-		representation[sizeof(representation) - len++ - 1] = '0' + value % 10;
-		value /= 10;
-	} while (value != 0);
+		representation[sizeof(representation) - len++ - 1] = '0' + abs_value % 10;
+		abs_value /= 10;
+	} while (abs_value != 0);
 
 	if (sign != '\0')
 		representation[sizeof(representation) - len++ - 1] = sign;
@@ -95,7 +98,13 @@ int printk(const char* restrict fmt, ...)
 				}
 				case 's': {
 					const char *s = va_arg(args, const char*);
-					int ret = print_string(s);
+					int ret;
+					/* Handle NULL pointer by printing "(null)" */
+					if (s == (void*)0) {
+						ret = print_string("(null)");
+					} else {
+						ret = print_string(s);
+					}
 					if (ret < 0) {
 						written = -1;
 						goto end;
@@ -155,7 +164,7 @@ static void print_hex(uint32_t value)
 	}
 	buffer[10] = '\0';
 
-	printk("%s", buffer);
+	print_string(buffer);
 }
 
 /* Print kernel stack information
