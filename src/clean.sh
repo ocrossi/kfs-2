@@ -7,4 +7,4 @@ for PROJECT in $PROJECTS; do
 done
 
 rm -rf sysroot/usr/lib sysroot/usr/include
-rm -rf sysroot/boot/kfs-1.bin
+rm -rf sysroot/boot/kfs-2.bin

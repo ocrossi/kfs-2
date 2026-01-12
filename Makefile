@@ -5,7 +5,7 @@ SRCDIR:=src
 VERBOSE:=## Assign a value to verbose to enable logging.
 DISTDIR:=dist## The image's destination directory.
 DISTVOL:=kfs-dist## The destination docker-volume.
-NAME:=kfs-1.iso## The name of the image.
+NAME:=kfs-2.iso## The name of the image.
 ##
 CMD:=./build_iso.sh## Command to run in the docker container.
 
@@ -41,17 +41,17 @@ help: ## Show available parameters and rules.
 
 ##
 
-kfs-1: $(SRCDIR) ## Build the host docker image.
-	@echo "BUILD kfs-1"
-	docker build -t kfs-1 .
+kfs-2: $(SRCDIR) ## Build the host docker image.
+	@echo "BUILD kfs-2"
+	docker build -t kfs-2 .
 
 $(DISTDIR):
 	@echo "MKDIR $(DISTDIR)"
 	mkdir -p "$(DISTDIR)"
 
-$(DISTDIR)/$(NAME): kfs-1 $(DISTDIR) ## Build the kfs image.
+$(DISTDIR)/$(NAME): kfs-2 $(DISTDIR) ## Build the kfs image.
 	if [ ! -f $(DISTDIR)/$(NAME) ] || [ ! -f "$(DISTDIR)/build-id" ] \
-	   || [ "$$(cat "$(DISTDIR)/build-id")" != "$$(docker inspect -f '{{.Id}}' kfs-1)" ]; \
+	   || [ "$$(cat "$(DISTDIR)/build-id")" != "$$(docker inspect -f '{{.Id}}' kfs-2)" ]; \
 	then \
 		set -euo pipefail; \
 \
@@ -59,8 +59,8 @@ $(DISTDIR)/$(NAME): kfs-1 $(DISTDIR) ## Build the kfs image.
 		docker run --rm \
 			-v /dev:/hostdev:ro \
 			-v "$(DISTVOL):/dist:rw" \
-			--name=kfs-1 \
-			-it kfs-1 $(CMD); \
+			--name=kfs-2 \
+			-it kfs-2 $(CMD); \
 \
 		if [ "$(CMD)" = "./build_iso.sh" ]; \
 		then \
@@ -68,18 +68,18 @@ $(DISTDIR)/$(NAME): kfs-1 $(DISTDIR) ## Build the kfs image.
 			docker run --rm -d \
 				--cap-drop=all \
 				-v "$(DISTVOL):/dist:rw" \
-				--name=kfs-1-dist \
-				kfs-1 \
+				--name=kfs-2-dist \
+				kfs-2 \
 				tail -f /dev/null; \
 	\
-			docker cp --quiet=false kfs-1-dist:/dist/kfs-1.iso \
+			docker cp --quiet=false kfs-2-dist:/dist/kfs-2.iso \
 				$(DISTDIR)/$(NAME) 2>&1 \
 			| awk '{printf "\r%s", $$0; fflush();}'; echo; \
 	\
-			echo "$$(docker inspect -f '{{.Id}}' kfs-1)" \
+			echo "$$(docker inspect -f '{{.Id}}' kfs-2)" \
 				> "$(DISTDIR)/build-id"; \
 	\
-			docker stop kfs-1-dist; \
+			docker stop kfs-2-dist; \
 	\
 			printf '\a'; \
 		fi \
@@ -94,6 +94,6 @@ qemu-run: $(DISTDIR)/$(NAME) ## Run the build image using qemu.
 check-scripts:
 	shellcheck $(shell find "$(SRCDIR)" -type f -name '*.sh')
 
-.PHONY: all help kfs edit qemu-run check-scripts
+.PHONY: all help kfs-2 edit qemu-run check-scripts
 
 $(VERBOSE).SILENT:

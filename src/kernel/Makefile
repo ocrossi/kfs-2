@@ -1,4 +1,4 @@
-NAME := kfs-1.bin
+NAME := kfs-2.bin
 
 COMMONDIR ?= ../common
 

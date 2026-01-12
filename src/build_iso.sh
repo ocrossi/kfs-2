@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-iso_name=kfs-1.iso
+iso_name=kfs-2.iso
 
 iso_content_dir="sysroot"
 iso_dist_dir="${DESTDIR:-/dist}"
