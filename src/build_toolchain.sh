@@ -17,16 +17,27 @@ fetch_gnu_archive() # [location]...
 	do
 		filename="${location##*/}"
 
-		[ -f gnu-keyring.gpg ] || wget https://ftp.gnu.org/gnu/gnu-keyring.gpg
-
-		if [ -e "$filename" ] && [ -e "$filename.sig" ]
-		then
-			gpgv --keyring ./gnu-keyring.gpg "$filename"{.sig,}
+		# Try to download the GNU keyring if not present, but don't fail if unavailable
+		if [ ! -f gnu-keyring.gpg ]; then
+			wget https://ftp.gnu.org/gnu/gnu-keyring.gpg 2>/dev/null || \
+				echo "Warning: Could not download GNU keyring, skipping signature verification" >&2
 		fi
 
-		wget --no-clobber "$location"{,.sig}
+		# If keyring exists and signatures exist, verify them
+		if [ -f gnu-keyring.gpg ] && [ -e "$filename" ] && [ -e "$filename.sig" ]
+		then
+			gpgv --keyring ./gnu-keyring.gpg "$filename"{.sig,} 2>/dev/null || \
+				echo "Warning: Signature verification failed for existing $filename" >&2
+		fi
 
-		gpgv --keyring ./gnu-keyring.gpg "$filename"{.sig,}
+		# Download archive and signature
+		wget --no-clobber "$location"{,.sig} 2>/dev/null || wget --no-clobber "$location"
+
+		# Verify signature if keyring is available
+		if [ -f gnu-keyring.gpg ]; then
+			gpgv --keyring ./gnu-keyring.gpg "$filename"{.sig,} 2>/dev/null || \
+				echo "Warning: Signature verification failed for $filename, proceeding anyway" >&2
+		fi
 	done
 }
 

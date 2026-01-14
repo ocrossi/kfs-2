@@ -43,7 +43,7 @@ help: ## Show available parameters and rules.
 
 kfs-2: $(SRCDIR) ## Build the host docker image.
 	@echo "BUILD kfs-2"
-	docker build -t kfs-2 .
+	docker build --network=host -t kfs-2 .
 
 $(DISTDIR):
 	@echo "MKDIR $(DISTDIR)"
